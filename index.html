@@ -12,16 +12,13 @@
       --panel-2: rgba(214, 230, 216, 0.35);
       --text: #12301a;
       --light: #f5fbf6;
-      --accent: #dce8dc;
-      --accent-2: #cddacd;
-      --chip: rgba(255,255,255,0.18);
-      --chip-hover: rgba(255,255,255,0.28);
       --border: rgba(255,255,255,0.22);
       --shadow: 0 10px 25px rgba(0,0,0,0.18);
     }
 
     * { box-sizing: border-box; }
     html, body { height: 100%; }
+
     body {
       margin: 0;
       font-family: "Segoe UI", Arial, sans-serif;
@@ -83,8 +80,16 @@
       gap: 14px;
     }
 
-    .bubble {
+    .bubble-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       max-width: 90%;
+      align-self: flex-start;
+    }
+
+    .bubble {
+      max-width: 100%;
       padding: 14px 16px;
       border-radius: 22px;
       line-height: 1.5;
@@ -108,12 +113,30 @@
       color: var(--light);
       border: 1px solid rgba(255,255,255,0.15);
       border-bottom-right-radius: 18px;
+      max-width: 80%;
     }
 
-    .meta {
-      font-size: 0.75rem;
-      opacity: 0.72;
-      margin-top: 8px;
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-left: 4px;
+    }
+
+    .suggestion-btn {
+      border: 1px solid rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.14);
+      color: var(--light);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .suggestion-btn:hover {
+      background: rgba(255,255,255,0.24);
+      transform: translateY(-1px);
     }
 
     .input-bar {
@@ -135,6 +158,7 @@
       font-size: 0.96rem;
       outline: none;
     }
+
     .input::placeholder { color: rgba(255,255,255,0.74); }
 
     .send {
@@ -149,13 +173,18 @@
       transition: 0.2s ease;
       border: 1px solid rgba(255,255,255,0.2);
     }
-    .send:hover { transform: scale(1.04); background: rgba(255,255,255,0.28); }
+
+    .send:hover {
+      transform: scale(1.04);
+      background: rgba(255,255,255,0.28);
+    }
 
     .typing {
       display: inline-flex;
       gap: 5px;
       align-items: center;
     }
+
     .typing span {
       width: 8px;
       height: 8px;
@@ -164,6 +193,7 @@
       display: inline-block;
       animation: blink 1.2s infinite ease-in-out;
     }
+
     .typing span:nth-child(2) { animation-delay: 0.2s; }
     .typing span:nth-child(3) { animation-delay: 0.4s; }
 
@@ -201,19 +231,19 @@
 
   <script>
     const plantData = [
-      { id: "AÇ1", tur: "Alev çalısı", grup: "Çalı", yas: 2, alan: "Alan 1", yaprak: "Yeşil-kırmızı", boy: 3.11, saglik: "Orta sağlıklı", sorun: "Yok", x: 29.3049505885038, y: 40.927744223342 },
-      { id: "AÇ2", tur: "Alev çalısı", grup: "Çalı", yas: 2, alan: "Alan 1", yaprak: "Yeşil-kırmızı", boy: 2.92, saglik: "Orta sağlıklı", sorun: "Yok", x: 29.3049502532277, y: 40.9276846946982 },
-      { id: "AÇ3", tur: "Alev çalısı", grup: "Çalı", yas: 2, alan: "Alan 1", yaprak: "Yeşil-kırmızı", boy: 2.83, saglik: "Orta sağlıklı", sorun: "Yok", x: 29.3049536059889, y: 40.9276431512593 },
-      { id: "ÇI1", tur: "Doğu çınarı", grup: "Ağaç", yas: 3, alan: "Alan 2", yaprak: "Yaprakları dökülmüş", boy: 4.0, saglik: "Kurumuş", sorun: "Kuruma", x: 29.3048580522927, y: 40.9276757970601 },
-      { id: "ÇI2", tur: "Doğu çınarı", grup: "Ağaç", yas: 3, alan: "Alan 3", yaprak: "Yaprakları dökülmüş", boy: 4.0, saglik: "Kurumuş", sorun: "Kuruma", x: 29.3049442182574, y: 40.9270068242287 },
-      { id: "FÇ1", tur: "Fıstık çamı", grup: "Ağaç", yas: 1, alan: "Alan 1", yaprak: "Yeşil", boy: 0.8, saglik: "Çok sağlıklı", sorun: "Yok", x: 29.3049492473992, y: 40.9277130658069 },
-      { id: "FÇ2", tur: "Fıstık çamı", grup: "Ağaç", yas: 1, alan: "Alan 3", yaprak: "Yeşil", boy: 0.65, saglik: "Çok sağlıklı", sorun: "Yok", x: 29.3049717108997, y: 40.9270179701372 },
-      { id: "ZE1", tur: "Zeytin", grup: "Çalı", yas: 1, alan: "Alan 3", yaprak: "Yeşil", boy: 0.67, saglik: "Çok sağlıklı", sorun: "Yok", x: 29.3049100200924, y: 40.9269987181123 },
-      { id: "ZE2", tur: "Zeytin", grup: "Çalı", yas: 1, alan: "Alan 2", yaprak: "Yeşil", boy: 0.75, saglik: "Çok sağlıklı", sorun: "Yok", x: 29.3048567111882, y: 40.9277092661053 }
+      { id: "AÇ1", tur: "Alev çalısı", grup: "Çalı", yas: 2, alan: "Alan 1", yaprak: "Yeşil-kırmızı", boy: 3.11, saglik: "Orta sağlıklı", sorun: "Yok" },
+      { id: "AÇ2", tur: "Alev çalısı", grup: "Çalı", yas: 2, alan: "Alan 1", yaprak: "Yeşil-kırmızı", boy: 2.92, saglik: "Orta sağlıklı", sorun: "Yok" },
+      { id: "AÇ3", tur: "Alev çalısı", grup: "Çalı", yas: 2, alan: "Alan 1", yaprak: "Yeşil-kırmızı", boy: 2.83, saglik: "Orta sağlıklı", sorun: "Yok" },
+      { id: "ÇI1", tur: "Doğu çınarı", grup: "Ağaç", yas: 3, alan: "Alan 2", yaprak: "Yaprakları dökülmüş", boy: 4.0, saglik: "Kurumuş", sorun: "Kuruma" },
+      { id: "ÇI2", tur: "Doğu çınarı", grup: "Ağaç", yas: 3, alan: "Alan 3", yaprak: "Yaprakları dökülmüş", boy: 4.0, saglik: "Kurumuş", sorun: "Kuruma" },
+      { id: "FÇ1", tur: "Fıstık çamı", grup: "Ağaç", yas: 1, alan: "Alan 1", yaprak: "Yeşil", boy: 0.8, saglik: "Çok sağlıklı", sorun: "Yok" },
+      { id: "FÇ2", tur: "Fıstık çamı", grup: "Ağaç", yas: 1, alan: "Alan 3", yaprak: "Yeşil", boy: 0.65, saglik: "Çok sağlıklı", sorun: "Yok" },
+      { id: "ZE1", tur: "Zeytin", grup: "Çalı", yas: 1, alan: "Alan 3", yaprak: "Yeşil", boy: 0.67, saglik: "Çok sağlıklı", sorun: "Yok" },
+      { id: "ZE2", tur: "Zeytin", grup: "Çalı", yas: 1, alan: "Alan 2", yaprak: "Yeşil", boy: 0.75, saglik: "Çok sağlıklı", sorun: "Yok" }
     ];
 
     const sensorInfo = {
-      nem: "Toprak nemi için ideal aralık %20–70'tir.",
+      nem: "Toprak nemi için ideal aralık yüzde 20–70'tir.",
       sicaklik: "Toprak sıcaklığı için 8–28 °C iyi kabul edilir. 10–18 °C ise serin ama normal bir aralıktır.",
       ec: "EC yani toprak besin seviyesi 0–0.3 ise çok düşük, 0.3–0.8 ise orta, 0.8–2 arası ise iyi besin düzeyi olarak yorumlanır."
     };
@@ -229,7 +259,7 @@
     const sendBtn = document.getElementById("sendBtn");
 
     function normalizeText(text) {
-      return text
+      return String(text)
         .toLocaleLowerCase("tr-TR")
         .replace(/[ç]/g, "c")
         .replace(/[ğ]/g, "g")
@@ -239,71 +269,259 @@
         .replace(/[ü]/g, "u");
     }
 
-    function addBubble(content, type = "bot") {
+    function addBubble(content, type) {
       const bubble = document.createElement("div");
-      bubble.className = `bubble ${type}`;
+      bubble.className = "bubble " + type;
       bubble.textContent = content;
       messagesEl.appendChild(bubble);
       messagesEl.scrollTop = messagesEl.scrollHeight;
       return bubble;
     }
 
+    function addBotResponse(content, suggestions) {
+      const wrap = document.createElement("div");
+      wrap.className = "bubble-wrap";
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble bot";
+      bubble.textContent = content;
+      wrap.appendChild(bubble);
+
+      if (suggestions && suggestions.length) {
+        const box = document.createElement("div");
+        box.className = "suggestions";
+
+        suggestions.forEach(function(item) {
+          const btn = document.createElement("button");
+          btn.className = "suggestion-btn";
+          btn.type = "button";
+          btn.textContent = item;
+          btn.addEventListener("click", function() {
+            handleSend(item);
+          });
+          box.appendChild(btn);
+        });
+
+        wrap.appendChild(box);
+      }
+
+      messagesEl.appendChild(wrap);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return wrap;
+    }
+
     function addTyping() {
+      const wrap = document.createElement("div");
+      wrap.className = "bubble-wrap";
+
       const bubble = document.createElement("div");
       bubble.className = "bubble bot";
       bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
-      messagesEl.appendChild(bubble);
+      wrap.appendChild(bubble);
+
+      messagesEl.appendChild(wrap);
       messagesEl.scrollTop = messagesEl.scrollHeight;
-      return bubble;
+      return wrap;
     }
 
     function uniqueValues(list, key) {
-      return [...new Set(list.map(item => item[key]))];
+      return Array.from(new Set(list.map(function(item) {
+        return item[key];
+      })));
     }
 
     function averageHeightByType(type) {
-      const items = plantData.filter(p => normalizeText(p.tur) === normalizeText(type));
+      const items = plantData.filter(function(p) {
+        return normalizeText(p.tur) === normalizeText(type);
+      });
       if (!items.length) return null;
-      const avg = items.reduce((sum, p) => sum + Number(p.boy || 0), 0) / items.length;
-      return avg.toFixed(2);
+      const total = items.reduce(function(sum, p) {
+        return sum + Number(p.boy || 0);
+      }, 0);
+      return (total / items.length).toFixed(2);
     }
 
     function summaryCounts() {
       const byType = {};
       const byHealth = {};
-      plantData.forEach(p => {
+
+      plantData.forEach(function(p) {
         byType[p.tur] = (byType[p.tur] || 0) + 1;
         byHealth[p.saglik] = (byHealth[p.saglik] || 0) + 1;
       });
+
       return { byType, byHealth };
     }
 
     function getPlantsInArea(area) {
-      return plantData.filter(p => normalizeText(p.alan) === normalizeText(area));
+      return plantData.filter(function(p) {
+        return normalizeText(p.alan) === normalizeText(area);
+      });
+    }
+
+    function getHealthDetailText(area) {
+      const data = area ? getPlantsInArea(area) : plantData;
+
+      if (!data.length) {
+        return "Bu alan için sağlık verisi bulunamadı.";
+      }
+
+      const total = data.length;
+      const cokSaglikli = data.filter(function(p) {
+        return normalizeText(p.saglik).includes("cok saglikli");
+      }).length;
+
+      const ortaSaglikli = data.filter(function(p) {
+        return normalizeText(p.saglik).includes("orta saglikli");
+      }).length;
+
+      const kurumus = data.filter(function(p) {
+        return normalizeText(p.saglik).includes("kurumus");
+      }).length;
+
+      const sorunlu = data.filter(function(p) {
+        return normalizeText(p.sorun) !== "yok";
+      });
+
+      const baslik = area
+        ? area + " için sağlık özeti:"
+        : "Bitkilerin sağlık durumu ayrıntılı olarak şöyle:";
+
+      const kritikTurler = Array.from(new Set(
+        sorunlu.map(function(p) { return p.tur; })
+      ));
+
+      const kritikSatir = kritikTurler.length
+        ? "• Öncelikli izlenecek türler: " + kritikTurler.join(", ")
+        : "• Öncelikli izlenecek özel bir tür kaydı yok";
+
+      const yorum = kurumus > 0
+        ? "Genel tabloya göre sağlıklı bitkiler çoğunlukta olsa da acil dikkat gerektiren kurumuş bireyler bulunuyor."
+        : "Genel tabloya göre bitkilerin büyük bölümü sağlıklı görünüyor.";
+
+      return baslik + "\n" +
+        "• Toplam kayıt: " + total + "\n" +
+        "• Çok sağlıklı: " + cokSaglikli + " adet\n" +
+        "• Orta sağlıklı: " + ortaSaglikli + " adet\n" +
+        "• Kurumuş: " + kurumus + " adet\n" +
+        "• Sorun kaydı olan bitkiler: " + sorunlu.length + " adet\n\n" +
+        "Değerlendirme:\n" +
+        "• Fıstık çamı ve zeytin kayıtları güçlü durumda görünüyor.\n" +
+        "• Alev çalıları orta sağlıklı sınıfında; düzenli gözlem yararlı olur.\n" +
+        "• Doğu çınarı kayıtlarında kuruma sorunu var; bakım ve neden analizi öncelikli olmalı.\n" +
+        kritikSatir + "\n\n" +
+        "Genel yorum: " + yorum;
+    }
+
+    function getSuggestions(question) {
+      const q = normalizeText(question);
+
+      if (q.includes("saglik")) {
+        return [
+          "Kurumuş bitkiler hangileri?",
+          "Doğu çınarı hakkında bilgi ver",
+          "Alan 2'de hangi bitkiler var?"
+        ];
+      }
+
+      if (q.includes("sensor") || q.includes("nem") || q.includes("sicaklik") || q.includes("ec")) {
+        return [
+          "Sensörler ne işe yarar?",
+          "Dijital ikiz nedir?",
+          "CBS ne işe yarar?"
+        ];
+      }
+
+      if (q.includes("dijital ikiz")) {
+        return [
+          "CBS ne işe yarar?",
+          "Sensör verileri neler?",
+          "Okul bahçesinde hangi bitkiler var?"
+        ];
+      }
+
+      if (q.includes("cbs")) {
+        return [
+          "Dijital ikiz nedir?",
+          "Alan 1'de hangi bitkiler var?",
+          "Sağlık durumu kötü olan bitkiler hangileri?"
+        ];
+      }
+
+      if (q.includes("alan")) {
+        return [
+          "Bu alandaki bitkilerin sağlık durumu nasıl?",
+          "Okul bahçesinde hangi bitkiler var?",
+          "Sensör verileri neler?"
+        ];
+      }
+
+      return [
+        "Sağlık durumları nasıl?",
+        "Sensör verileri neler?",
+        "Dijital ikiz nedir?"
+      ];
     }
 
     function answerQuestion(question) {
       const q = normalizeText(question);
       const counts = summaryCounts();
 
-      if (q.includes("hangi bitkiler var") || q.includes("okul bahcesinde") || q.includes("bitkiler neler")) {
-        const typeLines = Object.entries(counts.byType).map(([k, v]) => `• ${k}: ${v} adet`).join("\n");
-        return `Okul bahçesinde toplam ${plantData.length} bitki kaydı var. Türlere göre dağılım şöyle:\n${typeLines}`;
+      if (
+        q.includes("hangi bitkiler var") ||
+        q.includes("okul bahcesinde") ||
+        q.includes("bitkiler neler")
+      ) {
+        const typeLines = Object.entries(counts.byType).map(function(entry) {
+          return "• " + entry[0] + ": " + entry[1] + " adet";
+        }).join("\n");
+
+        return "Okul bahçesinde toplam " + plantData.length + " bitki kaydı var. Türlere göre dağılım şöyle:\n" + typeLines;
       }
 
-      if (q.includes("saglik durumu kotu") || q.includes("hasta bitki") || q.includes("kurumus") || q.includes("sorunlu bitki")) {
-        const risky = plantData.filter(p => normalizeText(p.saglik).includes("kurumus") || normalizeText(p.sorun).includes("kuruma"));
-        if (!risky.length) return "Kritik durumda görünen bitki kaydı bulunamadı.";
-        return `Sağlık durumu en zayıf görünen bitkiler şunlar:\n${risky.map(p => `• ${p.id} - ${p.tur} (${p.alan}) | Durum: ${p.saglik} | Sorun: ${p.sorun}`).join("\n")}`;
+      if (
+        q.includes("saglik durumu kotu") ||
+        q.includes("hasta bitki") ||
+        q.includes("kurumus") ||
+        q.includes("sorunlu bitki")
+      ) {
+        const risky = plantData.filter(function(p) {
+          return normalizeText(p.saglik).includes("kurumus") ||
+                 normalizeText(p.sorun).includes("kuruma");
+        });
+
+        if (!risky.length) {
+          return "Kritik durumda görünen bitki kaydı bulunamadı.";
+        }
+
+        return "Sağlık durumu en zayıf görünen bitkiler şunlar:\n" +
+          risky.map(function(p) {
+            return "• " + p.id + " - " + p.tur + " (" + p.alan + ") | Durum: " + p.saglik + " | Sorun: " + p.sorun;
+          }).join("\n");
       }
 
-      if (q.includes("saglik durumu") || q.includes("bitkilerin sagligi")) {
-        const healthLines = Object.entries(counts.byHealth).map(([k, v]) => `• ${k}: ${v} adet`).join("\n");
-        return `Bitkilerin sağlık durumları şöyle özetlenebilir:\n${healthLines}`;
+      if (
+        q.includes("saglik durumlari") ||
+        q.includes("saglik durumu") ||
+        q.includes("bitkilerin sagligi") ||
+        q.includes("bitki sagligi")
+      ) {
+        const areaMatch = question.match(/Alan\s*[123]/i);
+        const area = areaMatch ? areaMatch[0].replace(/\s+/g, " ") : null;
+        return getHealthDetailText(area);
       }
 
-      if (q.includes("sensor verileri") || q.includes("sensor") || q.includes("nem") || q.includes("sicaklik") || q.includes("ec")) {
-        return `Sensör verileri üç ana başlıkta yorumlanabilir:\n• ${sensorInfo.nem}\n• ${sensorInfo.sicaklik}\n• ${sensorInfo.ec}`;
+      if (
+        q.includes("sensor verileri") ||
+        q.includes("sensor") ||
+        q.includes("nem") ||
+        q.includes("sicaklik") ||
+        q.includes("ec")
+      ) {
+        return "Sensör verileri üç ana başlıkta yorumlanabilir:\n" +
+          "• " + sensorInfo.nem + "\n" +
+          "• " + sensorInfo.sicaklik + "\n" +
+          "• " + sensorInfo.ec;
       }
 
       if (q.includes("dijital ikiz")) {
@@ -321,50 +539,98 @@
       if (q.includes("alan 1") || q.includes("alan 2") || q.includes("alan 3")) {
         const match = question.match(/Alan\s*[123]/i);
         const area = match ? match[0].replace(/\s+/g, " ") : null;
+
         if (area) {
           const items = getPlantsInArea(area);
-          if (!items.length) return `${area} için kayıt bulunamadı.`;
-          return `${area} içinde kayıtlı bitkiler:\n${items.map(p => `• ${p.id} - ${p.tur} | ${p.saglik} | Boy: ${p.boy} m`).join("\n")}`;
+
+          if (!items.length) {
+            return area + " için kayıt bulunamadı.";
+          }
+
+          return area + " içinde kayıtlı bitkiler:\n" +
+            items.map(function(p) {
+              return "• " + p.id + " - " + p.tur + " | " + p.saglik + " | Boy: " + p.boy + " m";
+            }).join("\n");
         }
       }
 
-      const matchedPlant = uniqueValues(plantData, "tur").find(t => q.includes(normalizeText(t)));
+      const matchedPlant = uniqueValues(plantData, "tur").find(function(t) {
+        return q.includes(normalizeText(t));
+      });
+
       if (matchedPlant) {
-        const items = plantData.filter(p => p.tur === matchedPlant);
+        const items = plantData.filter(function(p) {
+          return p.tur === matchedPlant;
+        });
+
         const avg = averageHeightByType(matchedPlant);
-        const byArea = [...new Set(items.map(i => i.alan))].join(", ");
-        const healths = [...new Set(items.map(i => i.saglik))].join(", ");
-        const problems = [...new Set(items.map(i => i.sorun).filter(Boolean).filter(v => v !== "Yok"))].join(", ") || "Belirgin sorun kaydı yok";
-        return `${matchedPlant} hakkında kayıt özeti:\n• Adet: ${items.length}\n• Bulunduğu alanlar: ${byArea}\n• Ortalama boy: ${avg} m\n• Sağlık durumu: ${healths}\n• Sorun bilgisi: ${problems}`;
+        const byArea = Array.from(new Set(items.map(function(i) {
+          return i.alan;
+        }))).join(", ");
+
+        const healths = Array.from(new Set(items.map(function(i) {
+          return i.saglik;
+        }))).join(", ");
+
+        const problemsRaw = Array.from(new Set(
+          items.map(function(i) { return i.sorun; }).filter(function(v) {
+            return v && v !== "Yok";
+          })
+        ));
+
+        const problems = problemsRaw.length
+          ? problemsRaw.join(", ")
+          : "Belirgin sorun kaydı yok";
+
+        return matchedPlant + " hakkında kayıt özeti:\n" +
+          "• Adet: " + items.length + "\n" +
+          "• Bulunduğu alanlar: " + byArea + "\n" +
+          "• Ortalama boy: " + avg + " m\n" +
+          "• Sağlık durumu: " + healths + "\n" +
+          "• Sorun bilgisi: " + problems;
       }
 
       if (q.includes("yardim") || q.includes("neler sorabilirim")) {
-        return "Şunları sorabilirsin: okul bahçesindeki bitkiler, sağlık durumu kötü olanlar, alanlara göre bitki listesi, sensör verileri, dijital ikiz, CBS, alev çalısı, doğu çınarı, fıstık çamı veya zeytin hakkında özet bilgiler.";
+        return "Şunları sorabilirsin: okul bahçesindeki bitkiler, sağlık durumu, kurumuş bitkiler, alanlara göre bitki listesi, sensör verileri, dijital ikiz, CBS, alev çalısı, doğu çınarı, fıstık çamı veya zeytin hakkında özet bilgiler.";
       }
 
-      return "Bu soruya yakın bir bilgi bulamadım. Şunları deneyebilirsin: ‘Okul bahçesinde hangi bitkiler var?’, ‘Sağlık durumu kötü olan bitkiler hangileri?’, ‘Sensör verileri neler?’, ‘Dijital ikiz nedir?’ veya ‘CBS ne işe yarar?’";
+      return "Bu soruya yakın bir bilgi bulamadım. Bitki listesi, sağlık durumu, alanlara göre dağılım, sensör verileri, dijital ikiz ve CBS hakkında sorular sorabilirsin.";
     }
 
-    function handleSend(prefill = null) {
-      const text = (prefill ?? inputEl.value).trim();
+    function handleSend(prefill) {
+      const text = (prefill || inputEl.value).trim();
+
       if (!text) return;
+
       addBubble(text, "user");
       inputEl.value = "";
 
       const typing = addTyping();
-      setTimeout(() => {
+
+      setTimeout(function() {
         typing.remove();
-        addBubble(answerQuestion(text), "bot");
+        const answer = answerQuestion(text);
+        const suggestions = getSuggestions(text);
+        addBotResponse(answer, suggestions);
       }, 450);
     }
 
-    sendBtn.addEventListener("click", () => handleSend());
-    inputEl.addEventListener("keydown", (e) => {
+    sendBtn.addEventListener("click", function() {
+      handleSend();
+    });
+
+    inputEl.addEventListener("keydown", function(e) {
       if (e.key === "Enter") handleSend();
     });
 
-    addBubble("Merhaba! Ben Dijital Bahçıvan. Okul bahçesindeki bitkiler, sensör verileri, dijital ikiz ve CBS hakkında sorularını yanıtlayabilirim.", "bot");
-    
+    addBotResponse(
+      "Merhaba! Ben Dijital Bahçıvan. Okul bahçesindeki bitkiler, sağlık durumu, sensör verileri, dijital ikiz ve CBS hakkında sorularını yanıtlayabilirim.",
+      [
+        "Okul bahçesinde hangi bitkiler var?",
+        "Sağlık durumları nasıl?",
+        "Sensör verileri neler?"
+      ]
+    );
   </script>
 </body>
 </html>
