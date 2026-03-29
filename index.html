@@ -159,7 +159,9 @@
       outline: none;
     }
 
-    .input::placeholder { color: rgba(255,255,255,0.74); }
+    .input::placeholder {
+      color: rgba(255,255,255,0.74);
+    }
 
     .send {
       border: none;
@@ -243,15 +245,30 @@
     ];
 
     const sensorInfo = {
-      nem: "Toprak nemi için ideal aralık yüzde 20–70'tir.",
-      sicaklik: "Toprak sıcaklığı için 8–28 °C iyi kabul edilir. 10–18 °C ise serin ama normal bir aralıktır.",
-      ec: "EC yani toprak besin seviyesi 0–0.3 ise çok düşük, 0.3–0.8 ise orta, 0.8–2 arası ise iyi besin düzeyi olarak yorumlanır."
+      nem: "Toprak nemi için ideal aralık yüzde 20-70'tir.",
+      sicaklik: "Toprak sıcaklığı için 8-28 °C iyi kabul edilir. 10-18 °C ise serin ama normal bir aralıktır.",
+      ec: "EC yani toprak besin seviyesi 0-0.3 ise çok düşük, 0.3-0.8 ise orta, 0.8-2 arası ise iyi besin düzeyi olarak yorumlanır."
     };
 
     const concepts = {
-      dijitalIkiz: "Dijital ikiz, gerçek bir alanın, nesnenin veya sistemin dijital ortamda oluşturulan canlı ve güncellenebilir modelidir. Okul bahçesinde dijital ikiz kullanılırsa bitkilerin konumu, sağlık durumu ve sensör verileri tek ekranda izlenebilir.",
-      cbs: "CBS yani Coğrafi Bilgi Sistemleri; konuma bağlı verileri harita üzerinde toplamak, analiz etmek ve yorumlamak için kullanılır. Okul bahçesinde hangi bitkinin nerede olduğu, hangi alanda kuruma görüldüğü ve sensör noktalarının dağılımı CBS ile gösterilebilir.",
+      dijitalIkiz: "Dijital ikiz, gerçek bir alanın veya sistemin dijital ortamda oluşturulan güncellenebilir modelidir. Okul bahçesinde dijital ikiz kullanılırsa bitkilerin konumu, sağlık durumu ve sensör verileri tek ekranda izlenebilir.",
+      cbs: "CBS yani Coğrafi Bilgi Sistemleri; konuma bağlı verileri harita üzerinde toplamak, analiz etmek ve yorumlamak için kullanılır. Hangi bitkinin nerede olduğu ve hangi alanda kuruma görüldüğü CBS ile gösterilebilir.",
       sensor: "Sensörler toprak nemi, toprak sıcaklığı ve EC gibi verileri ölçerek bitki bakım kararlarını destekler. Böylece sulama, bakım ve risk tespiti daha bilinçli yapılır."
+    };
+
+    const areaSummaries = {
+      "alan 1": "Alan 1: 3 Alev çalısı, 1 Fıstık çamı.",
+      "alan 2": "Alan 2: 1 Doğu çınarı, 1 Zeytin.",
+      "alan 3": "Alan 3: 1 Doğu çınarı, 1 Zeytin ve 1 Fıstık çamı."
+    };
+
+    const observationGuide = "Bitki gözleminde yaprak rengi, yaprak dökümü, kuruma belirtisi, gövde ve dal yapısı, toprak nemi, güneş alma durumu, zararlı izi, mantar belirtisi, yeni sürgün oluşumu ve genel canlılık birlikte değerlendirilmelidir. Aynı bitki belirli aralıklarla tekrar gözlenirse değişim daha doğru yorumlanır.";
+
+    const careGuide = {
+      "alev calisi": "Alev çalısı için yarı gölge veya güneş alan ortam, düzenli fakat aşırı olmayan sulama, iyi drene toprak ve dönemsel budama uygundur.",
+      "dogu cinari": "Doğu çınarı için geniş gelişim alanı, derin ve geçirgen toprak, düzenli sulama ve özellikle genç dönemde kuruma belirtilerine karşı yakın takip gerekir.",
+      "fistik cami": "Fıstık çamı için bol güneş, çok sık olmayan kontrollü sulama ve suyu tutmayan toprak uygundur. Aşırı sulama kök sorunlarına yol açabilir.",
+      "zeytin": "Zeytin için bol güneş, iyi drene toprak ve ölçülü sulama gerekir. Fazla su yerine dengeli bakım daha uygundur."
     };
 
     const messagesEl = document.getElementById("messages");
@@ -287,7 +304,7 @@
       bubble.textContent = content;
       wrap.appendChild(bubble);
 
-      if (suggestions && suggestions.length) {
+      if (Array.isArray(suggestions) && suggestions.length > 0) {
         const box = document.createElement("div");
         box.className = "suggestions";
 
@@ -334,10 +351,15 @@
       const items = plantData.filter(function(p) {
         return normalizeText(p.tur) === normalizeText(type);
       });
-      if (!items.length) return null;
+
+      if (!items.length) {
+        return null;
+      }
+
       const total = items.reduce(function(sum, p) {
         return sum + Number(p.boy || 0);
       }, 0);
+
       return (total / items.length).toFixed(2);
     }
 
@@ -350,7 +372,7 @@
         byHealth[p.saglik] = (byHealth[p.saglik] || 0) + 1;
       });
 
-      return { byType, byHealth };
+      return { byType: byType, byHealth: byHealth };
     }
 
     function getPlantsInArea(area) {
@@ -367,34 +389,16 @@
       }
 
       const total = data.length;
-      const cokSaglikli = data.filter(function(p) {
-        return normalizeText(p.saglik).includes("cok saglikli");
-      }).length;
+      const cokSaglikli = data.filter(function(p) { return normalizeText(p.saglik).includes("cok saglikli"); }).length;
+      const ortaSaglikli = data.filter(function(p) { return normalizeText(p.saglik).includes("orta saglikli"); }).length;
+      const kurumus = data.filter(function(p) { return normalizeText(p.saglik).includes("kurumus"); }).length;
+      const sorunlu = data.filter(function(p) { return normalizeText(p.sorun) !== "yok"; });
 
-      const ortaSaglikli = data.filter(function(p) {
-        return normalizeText(p.saglik).includes("orta saglikli");
-      }).length;
-
-      const kurumus = data.filter(function(p) {
-        return normalizeText(p.saglik).includes("kurumus");
-      }).length;
-
-      const sorunlu = data.filter(function(p) {
-        return normalizeText(p.sorun) !== "yok";
-      });
-
-      const baslik = area
-        ? area + " için sağlık özeti:"
-        : "Bitkilerin sağlık durumu ayrıntılı olarak şöyle:";
-
-      const kritikTurler = Array.from(new Set(
-        sorunlu.map(function(p) { return p.tur; })
-      ));
-
+      const baslik = area ? area + " için sağlık özeti:" : "Bitkilerin sağlık durumu ayrıntılı olarak şöyle:";
+      const kritikTurler = Array.from(new Set(sorunlu.map(function(p) { return p.tur; })));
       const kritikSatir = kritikTurler.length
         ? "• Öncelikli izlenecek türler: " + kritikTurler.join(", ")
         : "• Öncelikli izlenecek özel bir tür kaydı yok";
-
       const yorum = kurumus > 0
         ? "Genel tabloya göre sağlıklı bitkiler çoğunlukta olsa da acil dikkat gerektiren kurumuş bireyler bulunuyor."
         : "Genel tabloya göre bitkilerin büyük bölümü sağlıklı görünüyor.";
@@ -451,8 +455,16 @@
       if (q.includes("alan")) {
         return [
           "Bu alandaki bitkilerin sağlık durumu nasıl?",
-          "Okul bahçesinde hangi bitkiler var?",
+          "Bitki gözleminde nelere dikkat edilmeli?",
           "Sensör verileri neler?"
+        ];
+      }
+
+      if (q.includes("gozlem") || q.includes("bakim") || q.includes("bakım")) {
+        return [
+          "Alev çalısı hakkında bilgi ver",
+          "Zeytin hakkında bilgi ver",
+          "Sağlık durumları nasıl?"
         ];
       }
 
@@ -467,57 +479,40 @@
       const q = normalizeText(question);
       const counts = summaryCounts();
 
-      if (
-        q.includes("hangi bitkiler var") ||
-        q.includes("okul bahcesinde") ||
-        q.includes("bitkiler neler")
-      ) {
+      if (q.includes("hangi bitkiler var") || q.includes("okul bahcesinde") || q.includes("bitkiler neler")) {
         const typeLines = Object.entries(counts.byType).map(function(entry) {
           return "• " + entry[0] + ": " + entry[1] + " adet";
         }).join("\n");
 
-        return "Okul bahçesinde toplam " + plantData.length + " bitki kaydı var. Türlere göre dağılım şöyle:\n" + typeLines;
+        return "Okul bahçesinde toplam " + plantData.length + " bitki kaydı var. Türlere göre dağılım şöyle:\n" +
+          typeLines +
+          "\n\nAlanlara göre dağılım:\n" +
+          "• " + areaSummaries["alan 1"] + "\n" +
+          "• " + areaSummaries["alan 2"] + "\n" +
+          "• " + areaSummaries["alan 3"];
       }
 
-      if (
-        q.includes("saglik durumu kotu") ||
-        q.includes("hasta bitki") ||
-        q.includes("kurumus") ||
-        q.includes("sorunlu bitki")
-      ) {
+      if (q.includes("saglik durumu kotu") || q.includes("hasta bitki") || q.includes("kurumus") || q.includes("sorunlu bitki")) {
         const risky = plantData.filter(function(p) {
-          return normalizeText(p.saglik).includes("kurumus") ||
-                 normalizeText(p.sorun).includes("kuruma");
+          return normalizeText(p.saglik).includes("kurumus") || normalizeText(p.sorun).includes("kuruma");
         });
 
         if (!risky.length) {
           return "Kritik durumda görünen bitki kaydı bulunamadı.";
         }
 
-        return "Sağlık durumu en zayıf görünen bitkiler şunlar:\n" +
-          risky.map(function(p) {
-            return "• " + p.id + " - " + p.tur + " (" + p.alan + ") | Durum: " + p.saglik + " | Sorun: " + p.sorun;
-          }).join("\n");
+        return "Sağlık durumu en zayıf görünen bitkiler şunlar:\n" + risky.map(function(p) {
+          return "• " + p.id + " - " + p.tur + " (" + p.alan + ") | Durum: " + p.saglik + " | Sorun: " + p.sorun;
+        }).join("\n");
       }
 
-      if (
-        q.includes("saglik durumlari") ||
-        q.includes("saglik durumu") ||
-        q.includes("bitkilerin sagligi") ||
-        q.includes("bitki sagligi")
-      ) {
+      if (q.includes("saglik durumlari") || q.includes("saglik durumu") || q.includes("bitkilerin sagligi") || q.includes("bitki sagligi")) {
         const areaMatch = question.match(/Alan\s*[123]/i);
         const area = areaMatch ? areaMatch[0].replace(/\s+/g, " ") : null;
         return getHealthDetailText(area);
       }
 
-      if (
-        q.includes("sensor verileri") ||
-        q.includes("sensor") ||
-        q.includes("nem") ||
-        q.includes("sicaklik") ||
-        q.includes("ec")
-      ) {
+      if (q.includes("sensor verileri") || q.includes("sensor") || q.includes("nem") || q.includes("sicaklik") || q.includes("ec")) {
         return "Sensör verileri üç ana başlıkta yorumlanabilir:\n" +
           "• " + sensorInfo.nem + "\n" +
           "• " + sensorInfo.sicaklik + "\n" +
@@ -541,16 +536,16 @@
         const area = match ? match[0].replace(/\s+/g, " ") : null;
 
         if (area) {
+          const areaKey = normalizeText(area);
           const items = getPlantsInArea(area);
 
           if (!items.length) {
             return area + " için kayıt bulunamadı.";
           }
 
-          return area + " içinde kayıtlı bitkiler:\n" +
-            items.map(function(p) {
-              return "• " + p.id + " - " + p.tur + " | " + p.saglik + " | Boy: " + p.boy + " m";
-            }).join("\n");
+          return area + " içinde kayıtlı bitkiler:\n" + items.map(function(p) {
+            return "• " + p.id + " - " + p.tur + " | " + p.saglik + " | Boy: " + p.boy + " m";
+          }).join("\n") + "\n\nÖzet: " + (areaSummaries[areaKey] || "-");
         }
       }
 
@@ -559,39 +554,40 @@
       });
 
       if (matchedPlant) {
-        const items = plantData.filter(function(p) {
-          return p.tur === matchedPlant;
-        });
-
+        const items = plantData.filter(function(p) { return p.tur === matchedPlant; });
         const avg = averageHeightByType(matchedPlant);
-        const byArea = Array.from(new Set(items.map(function(i) {
-          return i.alan;
-        }))).join(", ");
-
-        const healths = Array.from(new Set(items.map(function(i) {
-          return i.saglik;
-        }))).join(", ");
-
-        const problemsRaw = Array.from(new Set(
-          items.map(function(i) { return i.sorun; }).filter(function(v) {
-            return v && v !== "Yok";
-          })
-        ));
-
-        const problems = problemsRaw.length
-          ? problemsRaw.join(", ")
-          : "Belirgin sorun kaydı yok";
+        const byArea = Array.from(new Set(items.map(function(i) { return i.alan; }))).join(", ");
+        const healths = Array.from(new Set(items.map(function(i) { return i.saglik; }))).join(", ");
+        const problemsRaw = Array.from(new Set(items.map(function(i) { return i.sorun; }).filter(function(v) {
+          return v && v !== "Yok";
+        })));
+        const problems = problemsRaw.length ? problemsRaw.join(", ") : "Belirgin sorun kaydı yok";
+        const careKey = normalizeText(matchedPlant);
+        const careText = careGuide[careKey] || "Bu tür için temel bakımda sulama, ışık, toprak yapısı ve düzenli gözlem birlikte değerlendirilmelidir.";
 
         return matchedPlant + " hakkında kayıt özeti:\n" +
           "• Adet: " + items.length + "\n" +
           "• Bulunduğu alanlar: " + byArea + "\n" +
           "• Ortalama boy: " + avg + " m\n" +
           "• Sağlık durumu: " + healths + "\n" +
-          "• Sorun bilgisi: " + problems;
+          "• Sorun bilgisi: " + problems + "\n" +
+          "• Temel bakım: " + careText;
+      }
+
+      if (q.includes("gozlem") || q.includes("gözlem") || q.includes("nelere dikkat")) {
+        return "Bitkilerin gözlenmesinde dikkat edilmesi gereken temel noktalar şunlardır:\n" + observationGuide;
+      }
+
+      if (q.includes("bakim") || q.includes("bakım") || q.includes("bakimi") || q.includes("bakımı") || q.includes("temel sart") || q.includes("temel şart")) {
+        return "Bahçedeki türlerin temel bakım şartları şöyledir:\n" +
+          "• Alev çalısı: " + careGuide["alev calisi"] + "\n" +
+          "• Doğu çınarı: " + careGuide["dogu cinari"] + "\n" +
+          "• Fıstık çamı: " + careGuide["fistik cami"] + "\n" +
+          "• Zeytin: " + careGuide["zeytin"];
       }
 
       if (q.includes("yardim") || q.includes("neler sorabilirim")) {
-        return "Şunları sorabilirsin: okul bahçesindeki bitkiler, sağlık durumu, kurumuş bitkiler, alanlara göre bitki listesi, sensör verileri, dijital ikiz, CBS, alev çalısı, doğu çınarı, fıstık çamı veya zeytin hakkında özet bilgiler.";
+        return "Şunları sorabilirsin: okul bahçesindeki bitkiler, alanlara göre dağılım, sağlık durumu kötü olanlar, bitki gözleminde nelere dikkat edilmeli, türlerin temel bakım şartları, sensör verileri, dijital ikiz, CBS, alev çalısı, doğu çınarı, fıstık çamı veya zeytin hakkında özet bilgiler.";
       }
 
       return "Bu soruya yakın bir bilgi bulamadım. Bitki listesi, sağlık durumu, alanlara göre dağılım, sensör verileri, dijital ikiz ve CBS hakkında sorular sorabilirsin.";
@@ -600,14 +596,15 @@
     function handleSend(prefill) {
       const text = (prefill || inputEl.value).trim();
 
-      if (!text) return;
+      if (!text) {
+        return;
+      }
 
       addBubble(text, "user");
       inputEl.value = "";
 
       const typing = addTyping();
-
-      setTimeout(function() {
+      window.setTimeout(function() {
         typing.remove();
         const answer = answerQuestion(text);
         const suggestions = getSuggestions(text);
@@ -620,8 +617,17 @@
     });
 
     inputEl.addEventListener("keydown", function(e) {
-      if (e.key === "Enter") handleSend();
+      if (e.key === "Enter") {
+        handleSend();
+      }
     });
+
+    // Basic runtime tests
+    console.assert(normalizeText("Doğu Çınarı") === "dogu cinari", "normalizeText should normalize Turkish characters");
+    console.assert(getPlantsInArea("Alan 1").length === 4, "Alan 1 should have 4 plants");
+    console.assert(answerQuestion("Alan 2'de hangi bitkiler var?").includes("Alan 2"), "Area answer should mention Alan 2");
+    console.assert(answerQuestion("Sağlık durumları nasıl?").includes("Toplam kayıt"), "Health answer should include totals");
+    console.assert(Array.isArray(getSuggestions("sensör verileri")) && getSuggestions("sensör verileri").length > 0, "Suggestions should be generated");
 
     addBotResponse(
       "Merhaba! Ben Dijital Bahçıvan. Okul bahçesindeki bitkiler, sağlık durumu, sensör verileri, dijital ikiz ve CBS hakkında sorularını yanıtlayabilirim.",
