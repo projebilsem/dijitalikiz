@@ -148,6 +148,37 @@
       align-items: center;
     }
 
+    .input-actions {
+      padding: 0 16px 16px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .clear-btn {
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.14);
+      color: var(--light);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .clear-btn:hover {
+      background: rgba(255,255,255,0.24);
+      transform: translateY(-1px);
+    }
+
+    .input-bar {
+      padding: 14px 16px 16px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.05));
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
     .input {
       flex: 1;
       background: var(--panel-2);
@@ -228,6 +259,9 @@
         <input id="userInput" class="input" type="text" placeholder="Bir soru yaz..." />
         <button id="sendBtn" class="send" aria-label="Gönder">➤</button>
       </div>
+      <div class="input-actions">
+        <button id="clearBtn" class="clear-btn" type="button">Sohbeti Temizle</button>
+      </div>
     </div>
   </div>
 
@@ -274,6 +308,13 @@
     const messagesEl = document.getElementById("messages");
     const inputEl = document.getElementById("userInput");
     const sendBtn = document.getElementById("sendBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    const chatState = {
+      lastArea: null,
+      lastPlant: null,
+      lastTopic: null
+    };
 
     function normalizeText(text) {
       return String(text)
@@ -469,17 +510,62 @@
       }
 
       return [
+        "Bahçede ne tür bitkiler var?",
         "Sağlık durumları nasıl?",
-        "Sensör verileri neler?",
-        "Dijital ikiz nedir?"
+        "Sensör verileri neler?"
       ];
+    }
+
+    function resolveQuestionWithContext(question) {
+      let resolved = question.trim();
+      const q = normalizeText(resolved);
+
+      const plantHints = ["bakimi", "bakımı", "bakim", "gozlem", "gözlem", "boyu", "durumu", "sagligi", "sağlığı", "nerede"];
+      const referencesLastPlant = plantHints.some(function(hint) {
+        return q.includes(hint);
+      });
+
+      if (referencesLastPlant && chatState.lastPlant && !q.includes(normalizeText(chatState.lastPlant))) {
+        resolved += " " + chatState.lastPlant;
+      }
+
+      const referencesLastArea = (q.includes("bu alan") || q.includes("o alan") || q.includes("alandaki")) && chatState.lastArea;
+      if (referencesLastArea && !q.includes(normalizeText(chatState.lastArea))) {
+        resolved += " " + chatState.lastArea;
+      }
+
+      return resolved;
+    }
+
+    function updateContext(question) {
+      const q = normalizeText(question);
+
+      if (q.includes("alan 1")) {
+        chatState.lastArea = "Alan 1";
+        chatState.lastTopic = "alan";
+      } else if (q.includes("alan 2")) {
+        chatState.lastArea = "Alan 2";
+        chatState.lastTopic = "alan";
+      } else if (q.includes("alan 3")) {
+        chatState.lastArea = "Alan 3";
+        chatState.lastTopic = "alan";
+      }
+
+      const matchedPlant = uniqueValues(plantData, "tur").find(function(t) {
+        return q.includes(normalizeText(t));
+      });
+
+      if (matchedPlant) {
+        chatState.lastPlant = matchedPlant;
+        chatState.lastTopic = "bitki";
+      }
     }
 
     function answerQuestion(question) {
       const q = normalizeText(question);
       const counts = summaryCounts();
 
-      if (q.includes("hangi bitkiler var") || q.includes("okul bahcesinde") || q.includes("bitkiler neler")) {
+      if (q.includes("hangi bitkiler var") || q.includes("okul bahcesinde") || q.includes("bitkiler neler") || q.includes("ne tur bitkiler var") || q.includes("ne tür bitkiler var") || q.includes("bahcede ne var") || q.includes("bahçede ne var") || q.includes("tur bitkiler")) {
         const typeLines = Object.entries(counts.byType).map(function(entry) {
           return "• " + entry[0] + ": " + entry[1] + " adet";
         }).join("\n");
@@ -606,14 +692,35 @@
       const typing = addTyping();
       window.setTimeout(function() {
         typing.remove();
-        const answer = answerQuestion(text);
-        const suggestions = getSuggestions(text);
+        const resolvedText = resolveQuestionWithContext(text);
+        const answer = answerQuestion(resolvedText);
+        updateContext(resolvedText);
+        const suggestions = getSuggestions(resolvedText);
         addBotResponse(answer, suggestions);
       }, 450);
     }
 
+    function clearChat() {
+      messagesEl.innerHTML = "";
+      chatState.lastArea = null;
+      chatState.lastPlant = null;
+      chatState.lastTopic = null;
+      addBotResponse(
+        "Sohbet temizlendi. Okul bahçesindeki bitkiler, sağlık durumu, sensör verileri, dijital ikiz ve CBS hakkında yeniden soru sorabilirsin.",
+        [
+          "Bahçede ne tür bitkiler var?",
+          "Sağlık durumları nasıl?",
+          "Sensör verileri neler?"
+        ]
+      );
+    }
+
     sendBtn.addEventListener("click", function() {
       handleSend();
+    });
+
+    clearBtn.addEventListener("click", function() {
+      clearChat();
     });
 
     inputEl.addEventListener("keydown", function(e) {
@@ -628,6 +735,10 @@
     console.assert(answerQuestion("Alan 2'de hangi bitkiler var?").includes("Alan 2"), "Area answer should mention Alan 2");
     console.assert(answerQuestion("Sağlık durumları nasıl?").includes("Toplam kayıt"), "Health answer should include totals");
     console.assert(Array.isArray(getSuggestions("sensör verileri")) && getSuggestions("sensör verileri").length > 0, "Suggestions should be generated");
+    console.assert(answerQuestion("Bahçede ne tür bitkiler var?").includes("Türlere göre dağılım"), "Variant plant question should be recognized");
+    chatState.lastPlant = "Zeytin";
+    console.assert(resolveQuestionWithContext("Bakımı nasıl?").includes("Zeytin"), "Context should attach last plant to follow-up questions");
+    chatState.lastPlant = null;
 
     addBotResponse(
       "Merhaba! Ben Dijital Bahçıvan. Okul bahçesindeki bitkiler, sağlık durumu, sensör verileri, dijital ikiz ve CBS hakkında sorularını yanıtlayabilirim.",
